@@ -1,2 +1,6 @@
 tensorflow
 pandas
+keras
+graphviz
+pydot_ng
+pydot
