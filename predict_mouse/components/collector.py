@@ -1,6 +1,7 @@
 import numpy as np
 from PyQt4 import QtCore
-from predict_mouse.shared import Events
+
+from predict_mouse.components.shared import Events
 
 
 class Collector(QtCore.QObject):
@@ -27,8 +28,7 @@ class Collector(QtCore.QObject):
 
     def post_button_click(self, button_id):
         if self.index == self.count:
-            print('Clicked button ' + str(button_id))
             self.emit(Events.MOTION_COMPLETED, self.buffer, button_id)
-            self.index = 0
         else:
             print('Not enough data to forward')
+        self.index = 0
