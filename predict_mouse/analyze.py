@@ -15,7 +15,7 @@ def main():
 
     motion_data = [parse_motion_data_line(curve) for curve in content]
 
-    predictor = LogisticGridPredictor(7, 7, 800, 600, 0.5, 25)
+    predictor = LogisticGridPredictor(7, 7, 800, 600, 0.25, 25)
     predictor.set_train_data(motion_data)
 
 

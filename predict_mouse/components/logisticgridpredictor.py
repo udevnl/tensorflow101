@@ -37,14 +37,16 @@ class LogisticGridPredictor(QtCore.QObject):
     def __create_model(self):
 
         model = Sequential()
-        model.add(Dense(output_dim=32, input_dim=self.feature_count))
+        model.add(Dense(output_dim=64, input_dim=self.feature_count))
+        model.add(Activation("relu"))
+        model.add(Dense(output_dim=32))
         model.add(Activation("relu"))
         model.add(Dense(output_dim=self.output_count))
         model.add(Activation("softmax"))
 
         # The optimizer
         sgd = SGD(lr=0.01)
-        model.compile(optimizer=sgd, loss='mean_squared_error', metrics=['accuracy'])
+        model.compile(optimizer=sgd, loss='categorical_crossentropy', metrics=['accuracy'])
 
         return model
 
@@ -64,10 +66,19 @@ class LogisticGridPredictor(QtCore.QObject):
     def set_train_data(self, motion_curves):
         # Filter out the curves that do not have enough data
         good_curves = [curve for curve in motion_curves if len(curve) > self.curve_sample_count]
-        print("Loaded {} out of {} curves.".format(len(good_curves), len(motion_curves)))
 
+        m = len(good_curves)
+        print("Loaded {} out of {} curves.".format(m, len(motion_curves)))
 
+        x_curves = [self.__map_motion_curve_to_feature(curve[0:self.curve_sample_count]) for curve in good_curves]
+        y_labels = [self.__map_curve_to_final_grid_position(curve) for curve in good_curves]
 
+        self.train_data = np.array(x_curves).reshape((m, self.feature_count))
+        self.train_labels = np.array(y_labels).reshape((m, self.output_count))
+        print("Converted curves to features and labels.")
+
+        self.model.fit(self.train_data, self.train_labels, nb_epoch=50)
+        print("Training complete.")
 
         pass
 
