@@ -1,21 +1,25 @@
-import json
 import glob
-import numpy as np
-import matplotlib.pyplot as plt
-from scipy.interpolate import griddata
-from matplotlib.mlab import PCA
+import json
+import time
+from datetime import date
 
+import matplotlib.pyplot as plt
+import numpy as np
+from scipy.interpolate import griddata
 
 filenames = glob.glob("data/*.json")
 
 gridSizeSeconds = 60
-tStart = 1504450000
-tEnd =   1504811600
+tStart = time.mktime(date(2017, 9, 1).timetuple())
+tEnd =   time.mktime(date(2017, 9, 7).timetuple())
 grid = np.linspace(tStart, tEnd, num=np.int((tEnd-tStart)/gridSizeSeconds))
 
 
 f, axarr = plt.subplots(2, sharex=True)
 
+# extractDayTime = lambda t: ((t%86400)- 43200)/43200
+# extractDayTime = lambda t: random.randrange(-4, 4)
+# gridVals = np.array([extractDayTime(t) for t in grid])
 allData = np.array([grid])
 
 x = 0
@@ -27,14 +31,14 @@ for coin in filenames:
     np_array = np.array(data).transpose()
 
     u, indices = np.unique(np_array[0], return_index=True)
-    uTimes = np_array[0][indices] * 0.001
+    uTimes = np_array[0][indices] * 0.001 # Divide timestamp by 1000 to convert from ms to sec
     uVals = np_array[1][indices]
 
     gridVals=griddata(uTimes, uVals, grid, method='linear')
 
     # Normalize the values to the all-time maximum
     gridVals=gridVals * (1.0 / np.max(uVals))
-    gridVals-=0.5
+    gridVals-=gridVals.mean(axis=0)
 
     allData = np.concatenate((allData, [gridVals]), axis=0)
 
@@ -45,6 +49,8 @@ for coin in filenames:
     #     break
 
 allData = allData.transpose()
+
+# Remove the first row as it contains the linear time
 allData = allData[:,1:]
 
 eigenvectors, eigenvalues, V = np.linalg.svd(allData.T, full_matrices=False)
